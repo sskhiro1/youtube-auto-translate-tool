@@ -208,26 +208,72 @@
         padding: 20px;
       }
 
-      .fake-label {
+      .tool-label {
         color: #687471;
         font-size: 12px;
         font-weight: 900;
       }
 
-      .fake-input,
-      .fake-select {
+      .tool-input,
+      .tool-select {
+        width: 100%;
         min-height: 44px;
-        display: flex;
-        align-items: center;
         border: 1px solid rgba(20, 25, 27, 0.12);
         border-radius: 8px;
         padding: 0 12px;
         background: #fff;
         color: #56625f;
+        font: inherit;
       }
 
-      .fake-select {
-        justify-content: space-between;
+      .tool-select {
+        appearance: auto;
+      }
+
+      .tool-toggle {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        color: #3f4a48;
+        font-size: 13px;
+        font-weight: 800;
+      }
+
+      .tool-toggle input {
+        width: 17px;
+        height: 17px;
+        accent-color: #d8232a;
+      }
+
+      .tool-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+
+      .tool-button {
+        min-height: 42px;
+        border: 0;
+        border-radius: 8px;
+        background: #d8232a;
+        color: #fff;
+        cursor: pointer;
+        font: inherit;
+        font-weight: 900;
+      }
+
+      .tool-button.secondary-action {
+        border: 1px solid rgba(20, 25, 27, 0.14);
+        background: #fff;
+        color: #14191b;
+      }
+
+      .tool-status {
+        min-height: 20px;
+        margin: 0;
+        color: #5c6765;
+        font-size: 13px;
+        line-height: 1.5;
       }
 
       .language-grid {
@@ -314,27 +360,108 @@
               <span class="dot"></span>
               <span class="dot"></span>
             </div>
-            <div class="panel">
-              <div class="fake-label">YouTubeリンク</div>
-              <div class="fake-input">https://www.youtube.com/watch?v=...</div>
-              <div class="fake-label">翻訳先言語</div>
-              <div class="fake-select">日本語 / Japanese <strong>ja</strong></div>
-              <div class="fake-label">チャンネル連携</div>
-              <div class="fake-input">https://www.youtube.com/@channel</div>
+            <form class="panel" id="webTool">
+              <label class="tool-label" for="webVideoUrl">YouTubeリンク</label>
+              <input
+                id="webVideoUrl"
+                class="tool-input"
+                type="url"
+                placeholder="https://www.youtube.com/watch?v=..."
+                autocomplete="off"
+              >
+              <label class="tool-label" for="webLanguage">翻訳先言語</label>
+              <select id="webLanguage" class="tool-select"></select>
+              <label class="tool-label" for="webChannelUrl">チャンネル連携</label>
+              <input
+                id="webChannelUrl"
+                class="tool-input"
+                type="url"
+                placeholder="https://www.youtube.com/@channel"
+                autocomplete="off"
+              >
+              <label class="tool-toggle">
+                <input id="webAlwaysApply" type="checkbox">
+                <span>このチャンネルで常に自動翻訳</span>
+              </label>
+              <div class="tool-actions">
+                <button class="tool-button" type="submit">YouTubeを開く</button>
+                <button class="tool-button secondary-action" id="webSaveChannel" type="button">設定を保存</button>
+              </div>
+              <p class="tool-status" id="webStatus" role="status"></p>
               <div class="language-grid">
                 <div class="chip">194 languages</div>
                 <div class="chip">Google NMT</div>
                 <div class="chip">Channel link</div>
                 <div class="chip">Always apply</div>
-                <div class="chip wide">開いて自動設定</div>
               </div>
-            </div>
+            </form>
           </div>
-          <p class="note">字幕または自動生成字幕がある動画で動作します。YouTubeの画面変更により調整が必要になる場合があります。</p>
+          <p class="note">このページの入力欄は動作確認用です。YouTube画面で実際に自動設定するには、ZIPを展開してChrome拡張機能として読み込んでください。</p>
         </aside>
       </main>
 
       <footer>Public build for simple sharing and Chrome extension installation.</footer>
     </div>
+    <script src="./extension/languages.js"></script>
+    <script>
+      const webLanguage = document.querySelector("#webLanguage");
+      const webTool = document.querySelector("#webTool");
+      const webVideoUrl = document.querySelector("#webVideoUrl");
+      const webChannelUrl = document.querySelector("#webChannelUrl");
+      const webAlwaysApply = document.querySelector("#webAlwaysApply");
+      const webSaveChannel = document.querySelector("#webSaveChannel");
+      const webStatus = document.querySelector("#webStatus");
+
+      window.YTAutoTranslateLanguages.forEach((language) => {
+        const option = document.createElement("option");
+        option.value = language.code;
+        option.textContent = `${language.name} (${language.code})`;
+        if (language.code === "ja") option.selected = true;
+        webLanguage.appendChild(option);
+      });
+
+      function openableYouTubeUrl(rawUrl) {
+        const url = new URL(rawUrl.trim());
+        const host = url.hostname.replace(/^www\./, "");
+        if (host === "youtu.be") {
+          const videoId = url.pathname.split("/").filter(Boolean)[0];
+          return `https://www.youtube.com/watch?v=${videoId}&hl=en&cc_load_policy=1`;
+        }
+        if (host !== "youtube.com" && host !== "m.youtube.com") {
+          throw new Error("YouTubeリンクを入力してください。");
+        }
+        url.hostname = "www.youtube.com";
+        url.searchParams.set("hl", "en");
+        url.searchParams.set("cc_load_policy", "1");
+        return url.toString();
+      }
+
+      webTool.addEventListener("submit", (event) => {
+        event.preventDefault();
+        try {
+          const url = openableYouTubeUrl(webVideoUrl.value);
+          webStatus.textContent = "YouTubeを開きます。自動設定は拡張機能インストール後に動作します。";
+          window.open(url, "_blank", "noopener");
+        } catch (error) {
+          webStatus.textContent = error.message;
+        }
+      });
+
+      webSaveChannel.addEventListener("click", () => {
+        const channel = webChannelUrl.value.trim();
+        if (!channel) {
+          webStatus.textContent = "チャンネルURLを入力してください。";
+          return;
+        }
+        localStorage.setItem("ytat-channel-url", channel);
+        localStorage.setItem("ytat-language", webLanguage.value);
+        localStorage.setItem("ytat-always-apply", String(webAlwaysApply.checked));
+        webStatus.textContent = "このページ上の設定を保存しました。実際の自動設定は拡張機能で使えます。";
+      });
+
+      webChannelUrl.value = localStorage.getItem("ytat-channel-url") || "";
+      webLanguage.value = localStorage.getItem("ytat-language") || "ja";
+      webAlwaysApply.checked = localStorage.getItem("ytat-always-apply") === "true";
+    </script>
   </body>
 </html>

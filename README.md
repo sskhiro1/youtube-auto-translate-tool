@@ -36,6 +36,8 @@ https://youtube-translate-tool.netlify.app/
 
 ## 使い方
 
+公開ページの入力欄は動作確認用です。YouTube上で字幕メニューを自動操作するには、Chrome拡張機能として読み込んでください。
+
 1. Chromeの拡張機能アイコンから「YouTube Auto Translator」を開く
 2. YouTubeリンクを貼る
 3. 翻訳先言語を検索して選ぶ
