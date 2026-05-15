@@ -12,8 +12,15 @@ https://youtube-translate-tool.netlify.app/
 
 - `youtube.com` / `youtu.be` / Shorts URLを通常の動画URLに変換
 - YouTubeのUIを英語表示に寄せて、自動翻訳メニューを探しやすくする
-- できるだけ多くのYouTube/Google翻訳系の言語候補を選択肢として表示
+- Google Cloud Translation NMTの公式対応リストに合わせた194言語候補を表示
 - 字幕ボタン、設定、Subtitles/CC、Auto-translate、言語選択を自動クリック
+
+## 翻訳エンジンについて
+
+- 現在のChrome拡張は、YouTube内蔵の自動翻訳メニューを操作します。
+- 言語候補はGoogle Cloud TranslationのNMT対応言語を基準に194言語へ拡張済みです。
+- DeepL ProやGoogle Cloud Translation APIで実際に字幕ファイルを生成するには、APIキーをサーバー側に設定する必要があります。
+- 対応数を最大化するならGoogle Cloud Translation、主要言語の品質を優先するならDeepLを優先し、DeepL非対応言語はGoogleへフォールバックする構成が適しています。
 
 ## インストール
 
