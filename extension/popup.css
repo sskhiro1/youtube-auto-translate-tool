@@ -10,7 +10,7 @@
 }
 
 body {
-  width: 360px;
+  width: 380px;
   margin: 0;
   background: #f5f2ea;
 }
@@ -58,7 +58,8 @@ button {
   font: inherit;
 }
 
-input {
+input[type="url"],
+input[type="search"] {
   height: 40px;
   padding: 0 11px;
   background: #fffefa;
@@ -88,6 +89,47 @@ button {
 button:disabled {
   cursor: not-allowed;
   opacity: 0.55;
+}
+
+.channel-panel {
+  display: grid;
+  gap: 10px;
+  border-top: 1px solid #d8ded9;
+  padding-top: 12px;
+}
+
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #3d4648;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.toggle input {
+  width: 16px;
+  height: 16px;
+  accent-color: #d8232a;
+}
+
+.button-row {
+  display: grid;
+  grid-template-columns: 1fr 92px;
+  gap: 8px;
+}
+
+.secondary-button {
+  border: 1px solid #c8d0ca;
+  background: #fffefa;
+  color: #1e2528;
+}
+
+.ghost-button {
+  height: 36px;
+  border: 1px solid #d8ded9;
+  background: transparent;
+  color: #5b6665;
 }
 
 #status {

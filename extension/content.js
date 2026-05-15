@@ -17,6 +17,48 @@ function includesAny(element, patterns) {
   return patterns.some((pattern) => text.includes(pattern.toLowerCase()));
 }
 
+function normalizeChannelPath(urlOrPath) {
+  try {
+    const url = urlOrPath.startsWith("/")
+      ? new URL(urlOrPath, "https://www.youtube.com")
+      : new URL(urlOrPath);
+    const parts = url.pathname.split("/").filter(Boolean);
+
+    if (parts[0]?.startsWith("@")) return `/${parts[0].toLowerCase()}`;
+    if (["channel", "user", "c"].includes(parts[0]) && parts[1]) {
+      return `/${parts[0].toLowerCase()}/${parts[1].toLowerCase()}`;
+    }
+  } catch {
+    return "";
+  }
+
+  return "";
+}
+
+function currentVideoChannelPath() {
+  const ownerLink = [
+    ...document.querySelectorAll("ytd-video-owner-renderer a[href], #owner a[href], #upload-info a[href]")
+  ].find((link) => normalizeChannelPath(link.getAttribute("href")));
+
+  return ownerLink ? normalizeChannelPath(ownerLink.getAttribute("href")) : "";
+}
+
+async function isLinkedChannelVideo(settings) {
+  if (!settings.autoApplyLinkedChannel || !settings.linkedChannelUrl) return false;
+
+  const targetPath = normalizeChannelPath(settings.linkedChannelUrl);
+  if (!targetPath) return false;
+
+  const started = Date.now();
+  while (Date.now() - started < 10000) {
+    const videoPath = currentVideoChannelPath();
+    if (videoPath) return videoPath === targetPath;
+    await sleep(250);
+  }
+
+  return false;
+}
+
 async function waitForElement(selector, timeout = 12000) {
   const started = Date.now();
 
@@ -115,12 +157,20 @@ async function chooseAutoTranslateLanguage(languageName) {
 async function applyAutoTranslate() {
   const settings = await chrome.storage.local.get([
     "autoApply",
+    "autoApplyLinkedChannel",
+    "linkedChannelUrl",
     "targetLanguageName",
     "targetLanguageCode"
   ]);
 
-  if (!settings.autoApply || !settings.targetLanguageName) return;
+  if (!settings.targetLanguageName) return;
   if (!location.href.includes("/watch")) return;
+
+  const shouldApply = settings.autoApply || (await isLinkedChannelVideo(settings));
+  if (!shouldApply) return;
+
+  if (lastAppliedUrl === location.href) return;
+  lastAppliedUrl = location.href;
 
   showStatus(`Preparing YouTube auto-translate: ${settings.targetLanguageName}`);
 
@@ -128,10 +178,11 @@ async function applyAutoTranslate() {
     await waitForElement(".html5-video-player", 20000);
     await enableCaptions();
     await chooseAutoTranslateLanguage(settings.targetLanguageName);
-    await chrome.storage.local.set({ autoApply: false });
+    if (settings.autoApply) await chrome.storage.local.set({ autoApply: false });
     showStatus(`Auto-translate set to ${settings.targetLanguageName}`);
     setTimeout(() => document.querySelector("#yt-auto-translate-status")?.remove(), 4500);
   } catch (error) {
+    lastAppliedUrl = "";
     showStatus(
       `自動設定できませんでした。字幕が無い動画、またはYouTubeの表示変更の可能性があります。${error.message}`,
       "error"
@@ -140,6 +191,7 @@ async function applyAutoTranslate() {
 }
 
 let lastUrl = "";
+let lastAppliedUrl = "";
 setInterval(() => {
   if (location.href !== lastUrl) {
     lastUrl = location.href;

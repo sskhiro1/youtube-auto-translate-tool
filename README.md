@@ -14,6 +14,7 @@ https://youtube-translate-tool.netlify.app/
 - YouTubeのUIを英語表示に寄せて、自動翻訳メニューを探しやすくする
 - Google Cloud Translation NMTの公式対応リストに合わせた194言語候補を表示
 - 字幕ボタン、設定、Subtitles/CC、Auto-translate、言語選択を自動クリック
+- YouTubeチャンネルURLを連携し、そのチャンネルの動画で常に自動翻訳を設定
 
 ## 翻訳エンジンについて
 
@@ -39,6 +40,15 @@ https://youtube-translate-tool.netlify.app/
 2. YouTubeリンクを貼る
 3. 翻訳先言語を検索して選ぶ
 4. 「開いて自動設定」を押す
+
+## チャンネル連携
+
+1. 翻訳先言語を選ぶ
+2. YouTubeチャンネルURLを貼る
+3. 「このチャンネルの動画で常に自動翻訳」をオン
+4. 「チャンネル連携」を押す
+
+連携後は、そのチャンネルの動画ページを開くたびに保存済みの翻訳先へ自動設定します。
 
 ## 注意点
 

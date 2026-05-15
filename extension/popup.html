@@ -26,6 +26,23 @@
       <select id="languageSelect" size="8" aria-label="翻訳先言語"></select>
 
       <button id="openButton" type="button">開いて自動設定</button>
+
+      <section class="channel-panel" aria-label="チャンネル連携">
+        <label class="field">
+          <span>YouTubeチャンネルURL</span>
+          <input id="channelUrl" type="url" placeholder="https://www.youtube.com/@channel" autocomplete="off">
+        </label>
+        <label class="toggle">
+          <input id="channelAutoApply" type="checkbox">
+          <span>このチャンネルの動画で常に自動翻訳</span>
+        </label>
+        <div class="button-row">
+          <button id="linkChannelButton" type="button">チャンネル連携</button>
+          <button id="openChannelButton" class="secondary-button" type="button">開く</button>
+        </div>
+        <button id="clearChannelButton" class="ghost-button" type="button">連携解除</button>
+      </section>
+
       <p id="status" role="status"></p>
     </main>
 

@@ -2,6 +2,11 @@ const urlInput = document.querySelector("#youtubeUrl");
 const searchInput = document.querySelector("#languageSearch");
 const select = document.querySelector("#languageSelect");
 const openButton = document.querySelector("#openButton");
+const channelInput = document.querySelector("#channelUrl");
+const channelAutoApply = document.querySelector("#channelAutoApply");
+const linkChannelButton = document.querySelector("#linkChannelButton");
+const openChannelButton = document.querySelector("#openChannelButton");
+const clearChannelButton = document.querySelector("#clearChannelButton");
 const status = document.querySelector("#status");
 
 const japaneseNames = new Intl.DisplayNames(["ja"], { type: "language" });
@@ -81,11 +86,49 @@ function toWatchUrl(rawUrl) {
   return parsed.toString();
 }
 
+function toChannelUrl(rawUrl) {
+  let parsed;
+
+  try {
+    parsed = new URL(rawUrl.trim());
+  } catch {
+    throw new Error("YouTubeチャンネルURLを正しく入力してください。");
+  }
+
+  const host = parsed.hostname.replace(/^www\./, "");
+  if (host !== "youtube.com" && host !== "m.youtube.com") {
+    throw new Error("YouTubeチャンネルのURLを入力してください。");
+  }
+
+  const parts = parsed.pathname.split("/").filter(Boolean);
+  const first = parts[0] || "";
+  const isHandle = first.startsWith("@");
+  const isChannel = first === "channel" && parts[1];
+  const isUser = first === "user" && parts[1];
+  const isC = first === "c" && parts[1];
+
+  if (!isHandle && !isChannel && !isUser && !isC) {
+    throw new Error("@name、/channel/、/user/、/c/ のチャンネルURLを入力してください。");
+  }
+
+  parsed.hostname = "www.youtube.com";
+  parsed.search = "";
+  parsed.hash = "";
+  return parsed.toString().replace(/\/$/, "");
+}
+
 async function restoreState() {
-  const stored = await chrome.storage.local.get(["targetLanguageCode", "lastUrl"]);
+  const stored = await chrome.storage.local.get([
+    "targetLanguageCode",
+    "lastUrl",
+    "linkedChannelUrl",
+    "autoApplyLinkedChannel"
+  ]);
   const fallback = stored.targetLanguageCode || "ja";
 
   urlInput.value = stored.lastUrl || "";
+  channelInput.value = stored.linkedChannelUrl || "";
+  channelAutoApply.checked = Boolean(stored.autoApplyLinkedChannel);
   renderLanguages();
   select.value = fallback;
   if (!select.value) select.value = "ja";
@@ -116,6 +159,55 @@ openButton.addEventListener("click", async () => {
   } finally {
     openButton.disabled = false;
   }
+});
+
+linkChannelButton.addEventListener("click", async () => {
+  const selected = select.selectedOptions[0];
+  if (!selected) return;
+
+  linkChannelButton.disabled = true;
+  status.textContent = "チャンネルを連携しています...";
+
+  try {
+    const channelUrl = toChannelUrl(channelInput.value);
+    channelInput.value = channelUrl;
+
+    await chrome.storage.local.set({
+      linkedChannelUrl: channelUrl,
+      autoApplyLinkedChannel: channelAutoApply.checked,
+      targetLanguageCode: selected.value,
+      targetLanguageName: selected.dataset.name
+    });
+
+    status.textContent = "連携しました。このチャンネルの動画で自動翻訳します。";
+  } catch (error) {
+    status.textContent = error.message;
+  } finally {
+    linkChannelButton.disabled = false;
+  }
+});
+
+channelAutoApply.addEventListener("change", async () => {
+  await chrome.storage.local.set({ autoApplyLinkedChannel: channelAutoApply.checked });
+  status.textContent = channelAutoApply.checked
+    ? "チャンネル自動翻訳をオンにしました。"
+    : "チャンネル自動翻訳をオフにしました。";
+});
+
+openChannelButton.addEventListener("click", async () => {
+  try {
+    const channelUrl = toChannelUrl(channelInput.value);
+    await chrome.tabs.create({ url: channelUrl });
+  } catch (error) {
+    status.textContent = error.message;
+  }
+});
+
+clearChannelButton.addEventListener("click", async () => {
+  await chrome.storage.local.remove(["linkedChannelUrl", "autoApplyLinkedChannel"]);
+  channelInput.value = "";
+  channelAutoApply.checked = false;
+  status.textContent = "チャンネル連携を解除しました。";
 });
 
 restoreState();

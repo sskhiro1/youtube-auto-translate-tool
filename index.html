@@ -293,7 +293,7 @@
           <p class="eyebrow">Chrome extension</p>
           <h1>YouTubeの字幕翻訳を、リンクから一気に。</h1>
           <p class="lead">
-            YouTubeリンクと翻訳先を選ぶだけで、動画ページを開き、字幕、設定、Auto-translate、言語選択まで自動で進めるツールです。Google Cloud Translation NMTの公式対応リストに合わせ、194言語候補に拡張しました。
+            YouTubeリンクと翻訳先を選ぶだけで、動画ページを開き、字幕、設定、Auto-translate、言語選択まで自動で進めるツールです。チャンネル連携にも対応し、対象チャンネルの動画では毎回保存済みの翻訳先を設定できます。
           </p>
           <div class="actions">
             <a class="button primary" href="./youtube-auto-translate-extension.zip">拡張機能ZIPをダウンロード</a>
@@ -303,6 +303,7 @@
             <li><span>1</span>Chromeで chrome://extensions/ を開く</li>
             <li><span>2</span>デベロッパーモードをオンにする</li>
             <li><span>3</span>ZIPを展開し、extensionフォルダを読み込む</li>
+            <li><span>4</span>チャンネルURLを連携し、常に自動翻訳をオンにする</li>
           </ol>
         </section>
 
@@ -318,11 +319,13 @@
               <div class="fake-input">https://www.youtube.com/watch?v=...</div>
               <div class="fake-label">翻訳先言語</div>
               <div class="fake-select">日本語 / Japanese <strong>ja</strong></div>
+              <div class="fake-label">チャンネル連携</div>
+              <div class="fake-input">https://www.youtube.com/@channel</div>
               <div class="language-grid">
-              <div class="chip">194 languages</div>
-              <div class="chip">Google NMT</div>
-              <div class="chip">Korean</div>
-              <div class="chip">Arabic</div>
+                <div class="chip">194 languages</div>
+                <div class="chip">Google NMT</div>
+                <div class="chip">Channel link</div>
+                <div class="chip">Always apply</div>
                 <div class="chip wide">開いて自動設定</div>
               </div>
             </div>
