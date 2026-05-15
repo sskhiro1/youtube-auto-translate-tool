@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "YouTube Auto Translator",
+  "version": "0.1.0",
+  "description": "Open a YouTube link and automatically choose an auto-translate subtitle language.",
+  "permissions": ["storage", "tabs"],
+  "host_permissions": ["https://www.youtube.com/*", "https://m.youtube.com/*"],
+  "action": {
+    "default_title": "YouTube Auto Translator",
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.youtube.com/*", "https://m.youtube.com/*"],
+      "js": ["languages.js", "content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
