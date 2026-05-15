@@ -420,11 +420,27 @@
         webLanguage.appendChild(option);
       });
 
+      function parsePublicUrl(rawUrl, label) {
+        const value = rawUrl.trim();
+        if (!value) throw new Error(`${label}を入力してください。`);
+
+        try {
+          return new URL(value);
+        } catch {
+          try {
+            return new URL(`https://${value}`);
+          } catch {
+            throw new Error(`${label}を正しく入力してください。`);
+          }
+        }
+      }
+
       function openableYouTubeUrl(rawUrl) {
-        const url = new URL(rawUrl.trim());
+        const url = parsePublicUrl(rawUrl, "YouTubeリンク");
         const host = url.hostname.replace(/^www\./, "");
         if (host === "youtu.be") {
           const videoId = url.pathname.split("/").filter(Boolean)[0];
+          if (!videoId) throw new Error("動画IDが見つかりません。");
           return `https://www.youtube.com/watch?v=${videoId}&hl=en&cc_load_policy=1`;
         }
         if (host !== "youtube.com" && host !== "m.youtube.com") {
@@ -434,6 +450,29 @@
         url.searchParams.set("hl", "en");
         url.searchParams.set("cc_load_policy", "1");
         return url.toString();
+      }
+
+      function normalizePublicChannelUrl(rawUrl) {
+        const url = parsePublicUrl(rawUrl, "チャンネルURL");
+        const host = url.hostname.replace(/^www\./, "");
+        if (host !== "youtube.com" && host !== "m.youtube.com") {
+          throw new Error("YouTubeチャンネルURLを入力してください。");
+        }
+
+        const parts = url.pathname.split("/").filter(Boolean);
+        const first = parts[0] || "";
+        const valid =
+          first.startsWith("@") ||
+          (["channel", "user", "c"].includes(first) && parts[1]);
+
+        if (!valid) {
+          throw new Error("@name、/channel/、/user/、/c/ のチャンネルURLを入力してください。");
+        }
+
+        url.hostname = "www.youtube.com";
+        url.search = "";
+        url.hash = "";
+        return url.toString().replace(/\/$/, "");
       }
 
       webTool.addEventListener("submit", (event) => {
@@ -448,11 +487,14 @@
       });
 
       webSaveChannel.addEventListener("click", () => {
-        const channel = webChannelUrl.value.trim();
-        if (!channel) {
-          webStatus.textContent = "チャンネルURLを入力してください。";
+        let channel;
+        try {
+          channel = normalizePublicChannelUrl(webChannelUrl.value);
+        } catch (error) {
+          webStatus.textContent = error.message;
           return;
         }
+        webChannelUrl.value = channel;
         localStorage.setItem("ytat-channel-url", channel);
         localStorage.setItem("ytat-language", webLanguage.value);
         localStorage.setItem("ytat-always-apply", String(webAlwaysApply.checked));
